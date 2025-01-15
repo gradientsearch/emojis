@@ -1,5 +1,5 @@
 export async function getData(): Promise<[string, Error | undefined]> {
-	const url = 'https://unicode.org/emoji/charts/full-emoji-list.txt';
+	const url = `${location.origin}/emojis.json`;
 	try {
 		const response = await fetch(url);
 		if (!response.ok) {

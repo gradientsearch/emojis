@@ -8,103 +8,132 @@ class Emoji:
     subcategory: str
     description: str
     emoji: str
+    name: str
 
 def getEmojiList():
-    
     res = requests.get('https://unicode.org/emoji/charts/full-emoji-list.txt')
-
     with open('static/full-emoji-list.txt', 'w') as f:
         f.write(res.text)
         f.flush()
         os.fsync(f.fileno())
+    
+    res = requests.get('https://api.github.com/emojis')
+    with open('static/emojis.json', 'w') as f:
+        f.write(res.text)
+        f.flush()
+        os.fsync(f.fileno())
+            
+        
 
-def printEmoji():
-    with open('static/grinning', 'w') as f:
-        f.write("\U0001F601")
+def printEmoji(name, unicode):
+    with open(f'static/{name}', 'w') as f:
+        f.write(unicode)
         f.flush()
         os.fsync(f.fileno())
         
 def buildUnicodeMap(): 
-    list1 = []
+    unicodeDescriptionList = []
     with open('scripts/full-emoji-list.txt', 'r') as file:
-        list1 = file.readlines()
-    
-    
+        unicodeDescriptionList = file.readlines()
+
     with open('scripts/unicodeMap.py', 'w') as f:
-        
         f.write('UNICODE_MAP = {\n')
         
-        for l in list1:
-            l = l.strip()
-            if len(l) == 0:
+        for item in unicodeDescriptionList:
+            item = item.strip()
+            if len(item) == 0:
                 continue
             
-            if l.startswith('@@'):
-                currentCategory=l.replace('@@','').lower()
+            if item.startswith('@@'):
                 continue
-            if l.startswith('@'):
-                currentSubcatgory = l.replace('@','').lower()
+            if item.startswith('@'):
                 continue
             
-            
-            
-            ls = l.split('\t')
+            itemUnicodeDescription = item.split('\t')
 
-            
-            
-            for v in ls[0].upper().split(' '):
+            for v in itemUnicodeDescription[0].upper().split(' '):
                 pad = 8 - len(v) 
                 code = f"\\U{''.join(['0'] * pad)}{v}"
                 f.write(f'"{v}": "{code}",\n')
+
         f.write("}")
 
 def buildEmojiMap(): 
-    list1 = []
+    unicodeEmojiList = []
     with open('scripts/full-emoji-list.txt', 'r') as file:
-        list1 = file.readlines()
-    
-    list2 = []
+        unicodeEmojiList = file.readlines()
+
+    githubListWithNames = []
     with open('scripts/emojis.json', 'r') as file:
-        list2 = json.load(file)
-    #print(list)
-    #print(list2)
+        githubListWithNames = json.load(file)
     
+    githubNameUnicodeMap = {}        
+    for k in githubListWithNames:
+        namedKey = githubListWithNames[k].split('/')[-1].replace('.png?v8', '')
+        githubNameUnicodeMap[namedKey] = k
+
+    emojisMap = {}
     currentCategory: str
-    currentSubcatgory: str
-
+    currentSubcategory: str
     
-    for l in list1:
-        l = l.strip()
-        if len(l) == 0:
+    for item in unicodeEmojiList:
+        item = item.strip()
+        if len(item) == 0:
             continue
         
-        if l.startswith('@@'):
-            currentCategory=l.replace('@@','').lower()
+        if item.startswith('@@'):
+            currentCategory=item.replace('@@','').lower()
+            emojisMap[currentCategory] = {}
             continue
-        if l.startswith('@'):
-            currentSubcatgory = l.replace('@','').lower()
+        if item.startswith('@'):
+            currentSubcategory = item.replace('@','').lower()
+            emojisMap[currentCategory][currentSubcategory] = {}
             continue
-        
-        
-        
-        ls = l.split('\t')
 
+        unicodeDescription = item.split('\t')
         
-        code = ''
-        for v in ls[0].upper().split(' '):
-            code += unicodeMap.UNICODE_MAP[v]
+        emojiUnicode = ''
+        githubUnicodeKey = '' #<unicode>[-<unicode>[-<unidcode>]]
+        for v in unicodeDescription[0].upper().split(' '):
+            githubUnicodeKey += v.lower() + '-'
+            emojiUnicode += unicodeMap.UNICODE_MAP[v]
+
+        # remove last -
+        githubUnicodeKey = githubUnicodeKey[:-1] 
             
-        print(code)
-        desc = ls[1]
-        
-        
-      #  print((code, desc))
-        
+        e = Emoji()
+        e.category = currentCategory
+        e.subcategory = currentSubcategory
+        e.emoji = emojiUnicode
+        e.unicode = githubUnicodeKey
+        e.description = unicodeDescription[1]
 
+        # skip emoji if its not in the github list
+        if githubUnicodeKey in githubNameUnicodeMap:
+            e.name = githubNameUnicodeMap[githubUnicodeKey]
+        else: 
+            continue
+        
+        emojisMap[currentCategory][currentSubcategory][e.name] = {
+                'name': e.name,
+                'category': e.category,
+                'subcategory': e.subcategory,
+                'emoji': f'{e.emoji}',
+                'unicode': e.unicode,
+                'description': e.description
+        }
+
+        printEmoji(e.name, e.emoji)
+
+    # Note the unicode chars will be encoded     
+    with open('static/emojis.json', 'w') as f:
+        json.dump(emojisMap, f)
 
 def main():
+    # uncomment this if you need to rebuild the unicode map.
+    # Can't create unicode strings dynamically.
+    #buildUnicodeMap()    
     buildEmojiMap()
-    #buildUnicodeMap()
 
 if __name__ == '__main__':
     main()

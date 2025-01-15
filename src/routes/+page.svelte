@@ -18,7 +18,9 @@
 		navigator.clipboard.writeText(emoji['emoji']).then(
 			() => {
 				let id = crypto.randomUUID();
-
+                toasts.keys().forEach((k) => {
+                    toasts.delete(k)
+                })
 				toasts.set(id, emoji);
 				setTimeout(() => {
 					toasts.delete(id);

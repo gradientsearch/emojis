@@ -4,7 +4,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 
 	let emojis: any = $state(undefined);
-	let toasts: Map<string, any> = $state(new SvelteMap<string, any>());
+	let toasts: any[] = $state([]);
 	onMount(async () => {
 		let [resp, err] = await getData();
 		if (err !== undefined) {
@@ -14,17 +14,22 @@
 		}
 	});
 
+	let idTimeouts: number[] = [];
 	function copy(emoji: any) {
 		navigator.clipboard.writeText(emoji['emoji']).then(
 			() => {
 				let id = crypto.randomUUID();
-                toasts.keys().forEach((k) => {
-                    toasts.delete(k)
-                })
-				toasts.set(id, emoji);
-				setTimeout(() => {
-					toasts.delete(id);
+				toasts = [];
+				idTimeouts.forEach((i) => {
+					clearTimeout(i);
+				});
+
+				toasts.push(emoji);
+				let idTimeout = setTimeout(() => {
+					toasts = [];
 				}, 2000);
+
+				idTimeouts.push(idTimeout);
 			},
 			() => {
 				// Failed to copy text
@@ -58,6 +63,9 @@
 									onclick={() => {
 										copy(emojis[category][subcategory][emoji]);
 									}}
+									ontouchstart={() => {
+										copy(emojis[category][subcategory][emoji]);
+									}}
 									class="flex flex-wrap border p-4"
 								>
 									<span>
@@ -73,13 +81,13 @@
 	</div>
 </div>
 
-{#each toasts.keys() as t}
+{#each toasts as t}
 	<aside
 		class=" bg-base-900 text-base-200 fixed bottom-4 end-4 z-50 flex items-center justify-center gap-4 rounded-lg px-5 py-3"
 	>
 		<p>
-			Copied {toasts.get(t)['name']}
-			{toasts.get(t)['emoji']}!
+			Copied {t['name']}
+			{t['emoji']}!
 		</p>
 	</aside>
 {/each}

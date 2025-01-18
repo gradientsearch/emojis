@@ -4,28 +4,27 @@
 	import { SvelteMap } from 'svelte/reactivity';
 
 	let emojis: string = '';
-	let filteredEmojis: any = $state(undefined);
+	let filteredEmojis: category[] = $state([]);
 	let searchText: string = $state('');
 
 	let toasts: any[] = $state([]);
-
 	interface category {
-		name: string
-		subcategories: subcategory[]
+		name: string;
+		subcategories: subcategory[];
 	}
 
 	interface subcategory {
-		name: string
-		emojis: emoji[]
+		name: string;
+		emojis: emoji[];
 	}
 
 	interface emoji {
-		name: string
-		category: string
-		subcategory: string
-		emoji: string
-		unicode: string
-		description: string
+		name: string;
+		category: string;
+		subcategory: string;
+		emoji: string;
+		unicode: string;
+		description: string;
 	}
 
 	onMount(async () => {
@@ -34,50 +33,50 @@
 			console.log('TODO: popup a toast');
 		} else {
 			emojis = resp;
-			let emojisObj = JSON.parse(emojis);
-			let categories: any = [];
-			
-			Object.keys(emojisObj).forEach((category) => {
-				
-				let categoryList = [];
-				Object.keys(emojisObj[category]).forEach((subcategory) => {
-					let subcategoryList = [];
-					Object.keys(emojisObj[category][subcategory]).forEach((emoji) => {
-						let e = emojisObj[category][subcategory][emoji];
-						if (!(e['name'] as string).includes(searchText)) {
-							console.log('deleting ', e['name']);
-							delete emojisObj[category][subcategory][emoji];
-						}
-					});
-				});
-			});
-
-			filteredEmojis = JSON.parse(resp);
+			filterEmojis();
 		}
 	});
 
 	$effect(() => {
 		searchText;
-		if (searchText.length <= 0 || emojis.length <= 0) {
+		filterEmojis();
+	});
+
+	function filterEmojis() {
+		if (emojis.length <= 0) {
 			return;
 		}
 
-		console.log('search');
 		let emojisObj = JSON.parse(emojis);
-		Object.keys(emojisObj).forEach((category) => {
-			Object.keys(emojisObj[category]).forEach((subcategory) => {
-				Object.keys(emojisObj[category][subcategory]).forEach((emoji) => {
-					let e = emojisObj[category][subcategory][emoji];
-					if (!(e['name'] as string).includes(searchText)) {
-						console.log('deleting ', e['name']);
-						delete emojisObj[category][subcategory][emoji];
+		let categories: category[] = [];
+		Object.keys(emojisObj).forEach((c) => {
+			let category: category = {
+				name: c,
+				subcategories: []
+			};
+			Object.keys(emojisObj[c]).forEach((s) => {
+				let subcategory: subcategory = {
+					name: s,
+					emojis: []
+				};
+
+				Object.keys(emojisObj[c][s]).forEach((e) => {
+					let emoji = emojisObj[c][s][e] as emoji;
+					if (emoji.name.includes(searchText)) {
+						subcategory.emojis.push(emoji);
 					}
 				});
+				if (subcategory.emojis.length > 0) {
+					category.subcategories.push(subcategory);
+				}
 			});
+			if (category.subcategories.length > 0) {
+				categories.push(category);
+			}
 		});
 
-		filteredEmojis = filteredEmojis;
-	});
+		filteredEmojis = categories;
+	}
 
 	let idTimeouts: number[] = [];
 	function copy(emoji: any) {
@@ -113,26 +112,19 @@
 </header>
 
 <div class="flex h-full w-full justify-center">
-	<div class="w-full max-w-2xl lg:max-w-5xl lg:text-2xl">
-		<!--
-  Heads up! 👋
-
-  Plugins:
-    - @tailwindcss/forms
--->
-
-		<div class="relative pt-5">
+	<div class="w-full max-w-2xl lg:max-w-xl lg:text-2xl">
+		<div class="relative m-2 pt-5">
 			<label for="Search" class="sr-only"> Search </label>
 
 			<input
 				type="text"
 				id="Search"
 				placeholder="Search for..."
-				class="w-full rounded-lg border-base-200 py-2.5 pe-10 pl-4 shadow-sm sm:text-sm"
+				class="w-full rounded-lg border-base-200 py-2.5 pe-10 ps-4 shadow-sm sm:text-sm"
 				bind:value={searchText}
 			/>
 
-			<span class="absolute inset-y-0 end-0 grid w-10 place-content-center">
+			<span class="absolute inset-y-0 end-0 grid w-10 place-content-center pt-4">
 				<button type="button" class="text-base-700 hover:text-base-900">
 					<span class="sr-only">Search</span>
 
@@ -154,32 +146,36 @@
 			</span>
 		</div>
 		{#if filteredEmojis}
-			{#each Object.keys(filteredEmojis) as category}
-				<div class="mx-4 mt-10">
-					<h1 class="font-bold capitalize">{category}</h1>
-					{#each Object.keys(filteredEmojis[category]) as subcategory}
-						<div class="py-4">
-							<h2 class="capitalize">{subcategory.replaceAll('-', ' ')}</h2>
-						</div>
-						<div class="flex flex-wrap lg:text-3xl">
-							{#each Object.keys(filteredEmojis[category][subcategory]) as emoji}
-								<button
-									onclick={() => {
-										copy(filteredEmojis[category][subcategory][emoji]);
-									}}
-									ontouchstart={() => {
-										copy(filteredEmojis[category][subcategory][emoji]);
-									}}
-									class="flex flex-wrap border p-4"
-								>
-									<span>
-										{filteredEmojis[category][subcategory][emoji]['emoji']}
-									</span>
-								</button>
-							{/each}
-						</div>
-					{/each}
-				</div>
+			{#each filteredEmojis as category}
+				{#if category.subcategories.length > 0}
+					<div class="mx-4 mt-10">
+						<h1 class="font-bold capitalize">{category.name}</h1>
+						{#each category.subcategories as subcategory}
+							{#if subcategory.emojis.length > 0}
+								<div class="py-4">
+									<h2 class="capitalize">{subcategory.name.replaceAll('-', ' ')}</h2>
+								</div>
+								<div class="flex flex-wrap lg:text-3xl">
+									{#each subcategory.emojis as emoji}
+										<button
+											onclick={() => {
+												copy(emoji);
+											}}
+											ontouchstart={() => {
+												copy(emoji);
+											}}
+											class="flex flex-wrap border p-4"
+										>
+											<span class="lg:2xl text-3xl">
+												{emoji.emoji}
+											</span>
+										</button>
+									{/each}
+								</div>
+							{/if}
+						{/each}
+					</div>
+				{/if}
 			{/each}
 		{/if}
 	</div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { getData } from './services/emoji.service';
 	import { SvelteMap } from 'svelte/reactivity';
 
@@ -62,10 +62,21 @@
 
 				Object.keys(emojisObj[c][s]).forEach((e) => {
 					let emoji = emojisObj[c][s][e] as emoji;
-					if (emoji.name.replaceAll('_', ' ').includes(searchText.toLowerCase())) {
-						subcategory.emojis.push(emoji);
-					}
+
+					let search = searchText.toLowerCase().split(' ');
+
+					search.forEach((term) => {
+						if (
+							emoji.name.includes(term) ||
+							emoji.category.toLowerCase().includes(term) ||
+							emoji.subcategory.toLowerCase().includes(term) ||
+							emoji.description.toLowerCase().includes(term)
+						) {
+							subcategory.emojis.push(emoji);
+						}
+					});
 				});
+
 				if (subcategory.emojis.length > 0) {
 					category.subcategories.push(subcategory);
 				}
@@ -75,7 +86,9 @@
 			}
 		});
 
-		filteredEmojis = categories;
+		untrack(() => {
+			filteredEmojis = categories;
+		});
 	}
 
 	let idTimeouts: number[] = [];
@@ -105,18 +118,18 @@
 
 <header class="sticky top-0 flex h-[90px] items-center justify-center bg-base-100 p-1">
 	<div class="flex flex-col">
-		<h1 class="text-center text-lg font-extrabold pt-10">
+		<h1 class="pt-10 text-center text-lg font-extrabold">
 			😀 <span class="text-base-700">Git</span><span class="text-primary-600">Emojis</span> 😀
 		</h1>
 
-		<div class="relative m-2 pt-5 ">
+		<div class="relative m-2 pt-5">
 			<label for="Search" class="sr-only"> Search </label>
 
 			<input
 				type="text"
 				id="Search"
 				placeholder="Search for..."
-				class="w-full rounded-lg shadow-lg py-2.5 pe-10 ps-4 focus:scale-110 sm:text-sm border-primary-500 focus:outline-primary-500 border"
+				class="w-full rounded-lg border border-primary-500 py-2.5 pe-10 ps-4 shadow-lg focus:scale-110 focus:outline-primary-500 sm:text-sm"
 				bind:value={searchText}
 			/>
 
@@ -145,16 +158,18 @@
 </header>
 
 <div class="flex h-full w-full justify-center">
-	<div class="w-full max-w-2xl ">
+	<div class="w-full max-w-2xl">
 		{#if filteredEmojis}
 			{#each filteredEmojis as category}
 				{#if category.subcategories.length > 0}
 					<div class="mx-4 mt-10">
-						<span class="font-bold capitalize text-base-700 text-lg">{category.name}</span>
+						<span class="text-lg font-bold capitalize text-base-700">{category.name}</span>
 						{#each category.subcategories as subcategory}
 							{#if subcategory.emojis.length > 0}
 								<div class="py-4">
-									<span class="capitalize text-base-600 text-sm">{subcategory.name.replaceAll('-', ' ')}</span>
+									<span class="text-sm capitalize text-base-600"
+										>{subcategory.name.replaceAll('-', ' ')}</span
+									>
 								</div>
 								<div class="grid grid-cols-5 content-center items-center lg:text-3xl">
 									{#each subcategory.emojis as emoji}
@@ -162,7 +177,7 @@
 											onclick={() => {
 												copy(emoji);
 											}}
-											class="flex flex-wrap border p-4 justify-center"
+											class="flex flex-wrap justify-center border p-4"
 										>
 											<span class="lg:2xl text-3xl">
 												{emoji.emoji}

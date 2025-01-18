@@ -145,24 +145,24 @@
 </header>
 
 <div class="flex h-full w-full justify-center">
-	<div class="w-full max-w-2xl lg:max-w-xl lg:text-2xl">
+	<div class="w-full max-w-2xl ">
 		{#if filteredEmojis}
 			{#each filteredEmojis as category}
 				{#if category.subcategories.length > 0}
 					<div class="mx-4 mt-10">
-						<h1 class="font-bold capitalize">{category.name}</h1>
+						<span class="font-bold capitalize text-base-700 text-lg">{category.name}</span>
 						{#each category.subcategories as subcategory}
 							{#if subcategory.emojis.length > 0}
 								<div class="py-4">
-									<h2 class="capitalize">{subcategory.name.replaceAll('-', ' ')}</h2>
+									<span class="capitalize text-base-600 text-sm">{subcategory.name.replaceAll('-', ' ')}</span>
 								</div>
-								<div class="flex flex-wrap lg:text-3xl">
+								<div class="grid grid-cols-5 content-center items-center lg:text-3xl">
 									{#each subcategory.emojis as emoji}
 										<button
 											onclick={() => {
 												copy(emoji);
 											}}
-											class="flex flex-wrap border p-4"
+											class="flex flex-wrap border p-4 justify-center"
 										>
 											<span class="lg:2xl text-3xl">
 												{emoji.emoji}

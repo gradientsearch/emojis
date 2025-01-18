@@ -103,24 +103,20 @@
 	}
 </script>
 
-<header class="sticky top-0 flex h-[48px] items-center justify-center bg-base-100 p-1">
-	<div class="flex">
-		<h1 class="text-center text-lg font-extrabold">
+<header class="sticky top-0 flex h-[90px] items-center justify-center bg-base-100 p-1">
+	<div class="flex flex-col">
+		<h1 class="text-center text-lg font-extrabold pt-10">
 			😀 <span class="text-base-700">Git</span><span class="text-primary-600">Emojis</span> 😀
 		</h1>
-	</div>
-</header>
 
-<div class="flex h-full w-full justify-center">
-	<div class="w-full max-w-2xl lg:max-w-xl lg:text-2xl">
-		<div class="relative m-2 pt-5">
+		<div class="relative m-2 pt-5 ">
 			<label for="Search" class="sr-only"> Search </label>
 
 			<input
 				type="text"
 				id="Search"
 				placeholder="Search for..."
-				class="w-full rounded-lg border-base-200 py-2.5 pe-10 ps-4 shadow-sm sm:text-sm"
+				class="w-full rounded-lg shadow-lg py-2.5 pe-10 ps-4 focus:scale-110 sm:text-sm border-primary-500 focus:outline-primary-500 border"
 				bind:value={searchText}
 			/>
 
@@ -145,6 +141,11 @@
 				</button>
 			</span>
 		</div>
+	</div>
+</header>
+
+<div class="flex h-full w-full justify-center">
+	<div class="w-full max-w-2xl lg:max-w-xl lg:text-2xl">
 		{#if filteredEmojis}
 			{#each filteredEmojis as category}
 				{#if category.subcategories.length > 0}

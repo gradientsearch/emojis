@@ -1,0 +1,20 @@
+{
+    "theme_color": "#ca8a04",
+    "background_color": "#f9fafb",
+    "icons": [
+        {
+            "src": "icons/icon_512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+          }
+    ],
+    "orientation": "portrait",
+    "display": "standalone",
+    "dir": "auto",
+    "lang": "en-US",
+    "name": "gitEmojis",
+    "short_name": "gitEmojis",
+    "start_url": "/",
+    "scope": "/",
+    "description": "GitEmojis is a web app that showcases all GitHub emojis, organized by category and subcategory. It allows users to quickly browse, copy, and access emojis with ease."
+}

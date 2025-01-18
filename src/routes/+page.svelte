@@ -162,9 +162,6 @@
 											onclick={() => {
 												copy(emoji);
 											}}
-											ontouchstart={() => {
-												copy(emoji);
-											}}
 											class="flex flex-wrap border p-4"
 										>
 											<span class="lg:2xl text-3xl">

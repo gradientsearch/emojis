@@ -62,7 +62,7 @@
 
 				Object.keys(emojisObj[c][s]).forEach((e) => {
 					let emoji = emojisObj[c][s][e] as emoji;
-					if (emoji.name.includes(searchText)) {
+					if (emoji.name.replaceAll('_', ' ').includes(searchText.toLowerCase())) {
 						subcategory.emojis.push(emoji);
 					}
 				});
